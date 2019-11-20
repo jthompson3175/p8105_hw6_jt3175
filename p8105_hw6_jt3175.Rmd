@@ -25,3 +25,68 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 ```
+
+
+## Problem 1
+
+Load and clean the data for regression analysis (i.e. convert numeric to factor where appropriate, check for missing data, etc.).
+
+We load and clean the data for regression analysis, and find that there are no missing values in any of the columns. We also recode and convert _babysex_, _frace_, _malform_, and _mrace_ to factor variables. 
+
+```{r}
+birthweight = read_csv("./data/birthweight.csv") 
+
+# check for missing data
+
+ismissing = map(.x = birthweight, ~ sum(is.na(.x))) %>%  # why do you need the ~ ?!?
+  bind_cols()
+
+# male = 1, female = 2
+# 1 = White, 2 = Black, 3 = Asian, 4 = Puerto Rican, 8 = Other, 9 = Unknown
+# 0 = absent, 1 = present
+# 1 = White, 2 = Black, 3 = Asian, 4 = Puerto Rican, 8 = Other
+
+# Recode variables to make sense
+
+birthweight = birthweight %>% 
+  mutate(
+    babysex = recode(babysex, `1` = "male", `2` = "female"),
+    frace = recode(frace, `1` = "white", `2` = "black", `3` = "asian", `4` = "puerto rican", `8` = "other", `9` = "unknown"),
+    malform = recode(malform, `0` = "absent", `1` = "present"),
+    mrace = recode(mrace,  `1` = "white", `2` = "black", `3` = "asian", `4` = "puerto rican", `8` = "other")
+  )
+
+# change the above recoded variables into factors with levels corresponding to the above order
+
+birthweight = birthweight %>% 
+  mutate(
+    babysex = factor(babysex, levels = c("male", "female")),
+    frace = factor(frace, levels = c("white", "black", "asian", "puerto rican", "other", "unknown")),
+    malform = factor(malform, levels = c("absent", "present")),
+    mrace = factor(mrace, levels = c("white", "black", "asian", "puerto rican", "other"))
+  )
+```
+
+Propose a regression model for birthweight. This model may be based on a hypothesized structure for the factors that underly birthweight, on a data-driven model-building process, or a combination of the two. Describe your modeling process and show a plot of model residuals against fitted values – use add_predictions and add_residuals in making this plot.
+
+First, we used a hypothesized structure consulting literature for the factors that underly birthweight to reduce our number of potential predictors. We will continue with the following: gender (_babysex_), mother's BMI (_ppbmi_), mother's height (_mheigth_), cigarettes smoked per day (_smoken_), gestational age (_gaweeks_), mother's age (_momage_), and mother's race (_mrace_). 
+
+We will then choose a final model using stepwise backwards elimination. We begin with a model including all predictors chosen above, and then one by one eliminate non-significant predictors. We use a p-value of 0.15 here, because 
+
+```{r}
+# create a model for birthweight
+# first, get testing and training datasets
+
+# cv_df =
+#   crossv_mc(birthweight, 100) %>% 
+#   mutate(
+#     train = map(train, as_tibble),
+#     test = map(test, as_tibble))
+
+# hypothesize that mother's race might have an interaction with weight
+
+
+```
+
+
+
