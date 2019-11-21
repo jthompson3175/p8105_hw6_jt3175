@@ -69,29 +69,9 @@ birthweight = birthweight %>%
 
 Propose a regression model for birthweight. This model may be based on a hypothesized structure for the factors that underly birthweight, on a data-driven model-building process, or a combination of the two. Describe your modeling process and show a plot of model residuals against fitted values – use add_predictions and add_residuals in making this plot.
 
-We used a hypothesized structure consulting literature for the factors that underly birthweight to reduce our number of potential predictors. We will continue with the following: gender (_babysex_), mother's BMI (_ppbmi_), mother's height (_mheigth_), cigarettes smoked per day (_smoken_), and mother's age (_momage_). We chose a final model by fitting an interaction term between mother's age and number of cigarettes smoked per day, as indicated by past research. Because the interaction term is significant and there is evidence in the literature of interaction between age and smoking, we will keep the interaction in our final model. 
+We used a hypothesized structure consulting literature for the factors that underly birthweight to reduce our number of potential predictors. We will continue with the following: gender (_babysex_), mother's BMI (_ppbmi_), mother's height (_mheigth_), cigarettes smoked per day (_smoken_), and mother's age (_momage_). We chose a final model by fitting an interaction term between mother's age and number of cigarettes smoked per day, as indicated by past research. Because the interaction term is significant and there is evidence in the literature of interaction between age and smoking, we will keep the interaction in our final model. We then create a plot of residuals vs fitted values and find that our points are centered around 0 with no clear patterns that would be problematic. 
 
 ```{r}
-# create a model for birthweight
-# first, get testing and training datasets
-
-# cv_df =
-#   crossv_mc(birthweight, 100) %>% 
-#   mutate(
-#     train = map(train, as_tibble),
-#     test = map(test, as_tibble))
-
-# check assumptions
-
-ggplot(birthweight, aes(x = ppbmi))+
-  geom_histogram()
-ggplot(birthweight, aes(x = mheight))+
-  geom_histogram()
-ggplot(birthweight, aes(x = smoken))+
-  geom_histogram()
-ggplot(birthweight, aes(x = momage))+
-  geom_histogram()
-
 # interaction between smoking status and age - this interaction term is significant, so we will keep this as our final model
 
 interaction_model = lm(bwt ~ babysex + ppbmi + mheight + momage*smoken, data = birthweight) 
@@ -108,7 +88,19 @@ birthweight =
 
 ggplot(birthweight, aes(x = pred, y = resid))+
   geom_point()
+```
 
+Compare your model to two others:
+
+One using length at birth and gestational age as predictors (main effects only)
+One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
+
+```{r}
+simple_model_given = lm(bwt ~ blength + gaweeks, data = birthweight)
+summary(simple_model_given)
+  
+complex_model_given = lm(bwt ~ babysex * bhead * blength, data = birthweight)
+summary(complex_model_given)
 ```
 
 
