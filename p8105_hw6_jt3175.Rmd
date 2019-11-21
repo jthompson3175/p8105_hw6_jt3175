@@ -69,9 +69,7 @@ birthweight = birthweight %>%
 
 Propose a regression model for birthweight. This model may be based on a hypothesized structure for the factors that underly birthweight, on a data-driven model-building process, or a combination of the two. Describe your modeling process and show a plot of model residuals against fitted values – use add_predictions and add_residuals in making this plot.
 
-First, we used a hypothesized structure consulting literature for the factors that underly birthweight to reduce our number of potential predictors. We will continue with the following: gender (_babysex_), mother's BMI (_ppbmi_), mother's height (_mheigth_), cigarettes smoked per day (_smoken_), gestational age (_gaweeks_), mother's age (_momage_), and mother's race (_mrace_). 
-
-We will then choose a final model using stepwise backwards elimination. We begin with a model including all predictors chosen above, and then one by one eliminate non-significant predictors. We use a p-value of 0.15 here, because 
+We used a hypothesized structure consulting literature for the factors that underly birthweight to reduce our number of potential predictors. We will continue with the following: gender (_babysex_), mother's BMI (_ppbmi_), mother's height (_mheigth_), cigarettes smoked per day (_smoken_), and mother's age (_momage_). We chose a final model by fitting an interaction term between mother's age and number of cigarettes smoked per day, as indicated by past research. Because the interaction term is significant and there is evidence in the literature of interaction between age and smoking, we will keep the interaction in our final model. 
 
 ```{r}
 # create a model for birthweight
@@ -83,10 +81,37 @@ We will then choose a final model using stepwise backwards elimination. We begin
 #     train = map(train, as_tibble),
 #     test = map(test, as_tibble))
 
-# hypothesize that mother's race might have an interaction with weight
+# check assumptions
 
+ggplot(birthweight, aes(x = ppbmi))+
+  geom_histogram()
+ggplot(birthweight, aes(x = mheight))+
+  geom_histogram()
+ggplot(birthweight, aes(x = smoken))+
+  geom_histogram()
+ggplot(birthweight, aes(x = momage))+
+  geom_histogram()
+
+# interaction between smoking status and age - this interaction term is significant, so we will keep this as our final model
+
+interaction_model = lm(bwt ~ babysex + ppbmi + mheight + momage*smoken, data = birthweight) 
+summary(interaction_model)
+
+# show a plot of residuals vs fitted
+
+birthweight = 
+  birthweight %>% 
+  add_residuals(interaction_model) %>% 
+  add_predictions(interaction_model)
+
+# residuals are clustered, but there is no clear pattern... seems ok enough to proceed
+
+ggplot(birthweight, aes(x = pred, y = resid))+
+  geom_point()
 
 ```
 
 
+
+http://web.b.ebscohost.com/ehost/pdfviewer/pdfviewer?vid=1&sid=d6056f5b-5ea8-4211-8071-e675375944e1%40pdc-v-sessmgr04
 
