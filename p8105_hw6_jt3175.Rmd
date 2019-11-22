@@ -29,22 +29,13 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 ## Problem 1
 
-Load and clean the data for regression analysis (i.e. convert numeric to factor where appropriate, check for missing data, etc.).
-
 We load and clean the data for regression analysis, and find that there are no missing values in any of the columns. We also recode and convert _babysex_, _frace_, _malform_, and _mrace_ to factor variables. 
 
 ```{r}
 birthweight = read_csv("./data/birthweight.csv") 
 
-# check for missing data
-
-ismissing = map(.x = birthweight, ~ sum(is.na(.x))) %>%  # why do you need the ~ ?!?
+ismissing = map(.x = birthweight, ~ sum(is.na(.x))) %>%  
   bind_cols()
-
-# male = 1, female = 2
-# 1 = White, 2 = Black, 3 = Asian, 4 = Puerto Rican, 8 = Other, 9 = Unknown
-# 0 = absent, 1 = present
-# 1 = White, 2 = Black, 3 = Asian, 4 = Puerto Rican, 8 = Other
 
 # Recode variables to make sense
 
@@ -67,8 +58,6 @@ birthweight = birthweight %>%
   )
 ```
 
-Propose a regression model for birthweight. This model may be based on a hypothesized structure for the factors that underly birthweight, on a data-driven model-building process, or a combination of the two. Describe your modeling process and show a plot of model residuals against fitted values – use add_predictions and add_residuals in making this plot.
-
 We used a hypothesized structure consulting literature for the factors that underly birthweight to reduce our number of potential predictors. We will continue with the following: gender (_babysex_), mother's BMI (_ppbmi_), mother's height (_mheigth_), cigarettes smoked per day (_smoken_), and mother's age (_momage_). We chose a final model by fitting an interaction term between mother's age and number of cigarettes smoked per day, as indicated by past research. Because the interaction term is significant and there is evidence in the literature of interaction between age and smoking, we will keep the interaction in our final model. We then create a plot of residuals vs fitted values and find that our points are centered around 0 with no clear patterns that would be problematic. 
 
 ```{r}
@@ -90,19 +79,19 @@ ggplot(birthweight, aes(x = pred, y = resid))+
   geom_point()
 ```
 
-Compare your model to two others:
+We compare the above model to two others using cross validation:
 
-One using length at birth and gestational age as predictors (main effects only)
-One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
+* One using length at birth and gestational age as predictors (main effects only)
+* One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
 
 ```{r}
 # This is just for me to think about it 
 
-simple_model_given = lm(bwt ~ blength + gaweeks, data = birthweight)
-summary(simple_model_given)
-  
-complex_model_given = lm(bwt ~ babysex * bhead * blength, data = birthweight)
-summary(complex_model_given)
+# simple_model_given = lm(bwt ~ blength + gaweeks, data = birthweight)
+# summary(simple_model_given)
+#   
+# complex_model_given = lm(bwt ~ babysex * bhead * blength, data = birthweight)
+# summary(complex_model_given)
 ```
 
 Make this comparison in terms of the cross-validated prediction error; use crossv_mc and functions in purrr as appropriate.
@@ -110,12 +99,7 @@ Make this comparison in terms of the cross-validated prediction error; use cross
 ```{r}
 # need to create testing and training datasets to use on all 3 models.
 
-# models to compare:
-# interaction_model
-# simple_model_given
-# complex_model_given
-
-cv_df = crossv_mc(birthweight, 10)
+cv_df = crossv_mc(birthweight, 100)
 
 cv_df = cv_df %>% 
   mutate(
@@ -139,7 +123,7 @@ cv_df =
 
 cv_df %>% 
   select(starts_with("rmse")) %>% 
-pivot_longer(
+  pivot_longer(
     everything(),
     names_to = "model", 
     values_to = "rmse",
@@ -149,7 +133,6 @@ pivot_longer(
 ```
 
 http://web.b.ebscohost.com/ehost/pdfviewer/pdfviewer?vid=1&sid=d6056f5b-5ea8-4211-8071-e675375944e1%40pdc-v-sessmgr04
-
 
 ## Problem 2
 
@@ -169,7 +152,7 @@ weather_df =
 
 We’ll focus on a simple linear regression with tmax as the response and tmin as the predictor.
 
-Use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of these two quantities.
+Use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of \[ \hat{r}^2\ \text{and}\ log(\hat{{\beta}_0} * \hat{{\beta}_1}) \]
 
 ```{r}
 bootstrap = 
