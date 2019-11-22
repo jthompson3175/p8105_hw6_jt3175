@@ -153,3 +153,68 @@ http://web.b.ebscohost.com/ehost/pdfviewer/pdfviewer?vid=1&sid=d6056f5b-5ea8-421
 
 ## Problem 2
 
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+```
+
+We’ll focus on a simple linear regression with tmax as the response and tmin as the predictor.
+
+Use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of these two quantities.
+
+```{r}
+boot_straps = 
+  weather_df %>% 
+  modelr::bootstrap(n = 100)
+```
+
+```{r}
+bootstrap = 
+  weather_df %>% 
+  modelr::bootstrap(n = 100) %>% 
+  mutate(
+    models = map(strap, ~lm(tmax ~ tmin, data = .x))
+  )
+
+output = 
+  bootstrap %>% 
+  mutate(
+    results_ln = map(models, broom::tidy),
+    results_rsq = map(models, broom::glance)
+    ) %>% 
+  select(-strap, -models) %>% 
+  unnest(results_ln, results_rsq) %>% 
+  select(.id, term, estimate, adj.r.squared) %>% 
+  pivot_wider(
+    names_from = term, 
+    values_from = estimate
+  ) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    ln_est = log(intercept * tmin)
+  ) %>% 
+  select(adj_r_squared, ln_est)
+```
+
+Plot the distribution of your estimates, and describe these in words.
+
+```{r}
+
+```
+
+Using the 5000 bootstrap estimates, identify the 2.5% and 97.5% quantiles to provide a 95% confidence interval
+
+```{r}
+
+```
+
+
