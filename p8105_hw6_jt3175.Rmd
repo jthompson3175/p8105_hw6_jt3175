@@ -172,15 +172,9 @@ We’ll focus on a simple linear regression with tmax as the response and tmin a
 Use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of these two quantities.
 
 ```{r}
-boot_straps = 
-  weather_df %>% 
-  modelr::bootstrap(n = 100)
-```
-
-```{r}
 bootstrap = 
   weather_df %>% 
-  modelr::bootstrap(n = 100) %>% 
+  modelr::bootstrap(n = 5000) %>% 
   mutate(
     models = map(strap, ~lm(tmax ~ tmin, data = .x))
   )
@@ -208,7 +202,11 @@ output =
 Plot the distribution of your estimates, and describe these in words.
 
 ```{r}
+ggplot(output, aes(x = adj_r_squared))+
+  geom_histogram()
 
+ggplot(output, aes(x = ln_est))+
+  geom_histogram()
 ```
 
 Using the 5000 bootstrap estimates, identify the 2.5% and 97.5% quantiles to provide a 95% confidence interval
