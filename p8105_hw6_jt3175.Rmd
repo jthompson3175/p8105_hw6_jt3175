@@ -96,6 +96,8 @@ One using length at birth and gestational age as predictors (main effects only)
 One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
 
 ```{r}
+# This is just for me to think about it 
+
 simple_model_given = lm(bwt ~ blength + gaweeks, data = birthweight)
 summary(simple_model_given)
   
@@ -103,7 +105,51 @@ complex_model_given = lm(bwt ~ babysex * bhead * blength, data = birthweight)
 summary(complex_model_given)
 ```
 
+Make this comparison in terms of the cross-validated prediction error; use crossv_mc and functions in purrr as appropriate.
 
+```{r}
+# need to create testing and training datasets to use on all 3 models.
+
+# models to compare:
+# interaction_model
+# simple_model_given
+# complex_model_given
+
+cv_df = crossv_mc(birthweight, 10)
+
+cv_df = cv_df %>% 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble)
+  )
+
+```
+
+```{r}
+# Now fit the respective models to each
+
+cv_df = 
+  cv_df %>% 
+  mutate(interaction_model = map(train, ~lm(bwt ~ babysex + ppbmi + mheight + momage * smoken, data = .x)),
+         simple_model_given = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
+         complex_model_given = map(train, ~lm(bwt ~ babysex * bhead * blength, data = .x))) %>% 
+  mutate(rmse_interaction = map2_dbl(interaction_model, test, ~rmse(model = .x, data = .y)),
+         rmse_simple = map2_dbl(simple_model_given, test, ~rmse(model = .x, data = .y)),
+         rmse_complex = map2_dbl(complex_model_given, test, ~rmse(model = .x, data = .y)))
+
+cv_df %>% 
+  select(starts_with("rmse")) %>% 
+pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = model, y = rmse)) + geom_violin()
+```
 
 http://web.b.ebscohost.com/ehost/pdfviewer/pdfviewer?vid=1&sid=d6056f5b-5ea8-4211-8071-e675375944e1%40pdc-v-sessmgr04
+
+
+## Problem 2
 
