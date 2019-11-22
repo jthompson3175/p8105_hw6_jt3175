@@ -204,10 +204,15 @@ conf_int = output %>%
   ) %>% 
   pivot_longer(
     cols = lower_rsq:upper_ln,
-    names_to = "description",
-    values_to = c("lower", "upper"),
+    names_to = "Estimate",
+    values_to = c("Lower", "Upper"),
     names_prefix = c("lower_", "upper_")
+  ) %>% 
+  mutate(
+    Estimate = recode(Estimate, "rsq" = "R Hat Squared", "ln" = "Log Beta Hat")
   )
+
+conf_int %>% knitr::kable()
 ```
 
 
