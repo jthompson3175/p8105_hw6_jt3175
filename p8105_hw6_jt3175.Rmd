@@ -78,25 +78,22 @@ birthweight =
 # residuals are clustered, but there is no clear pattern... seems ok enough to proceed
 
 ggplot(birthweight, aes(x = pred, y = resid))+
-  geom_point()
+  geom_point(alpha = .4)+
+  labs(
+    title = "Residuals vs Fitted Values",
+    x = "Fitted Values",
+    y = "Residuals"
+  )
 ```
 
 We compare the above model to two others using cross validation:
 
-* One using length at birth and gestational age as predictors (main effects only)
-* One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
+* One using length at birth and gestational age as predictors
+* One using head circumference, length, sex, and all interactions between these
 
-```{r}
-# This is just for me to think about it 
+To do this we create 100 testing and training datasets, where each one is split 80% training and 20% testing. We then fit each model using the training dataset, and evaluate it using the prediction error from the testing dataset. We do this for each of the 100 datasets, and then create violin plots comparing the cross-validated prediciton error. 
 
-# simple_model_given = lm(bwt ~ blength + gaweeks, data = birthweight)
-# summary(simple_model_given)
-#   
-# complex_model_given = lm(bwt ~ babysex * bhead * blength, data = birthweight)
-# summary(complex_model_given)
-```
-
-Make this comparison in terms of the cross-validated prediction error; use crossv_mc and functions in purrr as appropriate.
+We find that the more complex model has the lowest distribution of prediction errors. 
 
 ```{r}
 # need to create testing and training datasets to use on all 3 models.
@@ -131,14 +128,15 @@ cv_df %>%
     values_to = "rmse",
     names_prefix = "rmse_") %>% 
   mutate(model = fct_inorder(model)) %>% 
-  ggplot(aes(x = model, y = rmse)) + geom_violin()
+  ggplot(aes(x = model, y = rmse)) + geom_violin() +
+  labs(title = "Cross-Validated Prediction Error for Three Models",
+       x = "Model",
+       y = "RMSE")
 ```
-
-http://web.b.ebscohost.com/ehost/pdfviewer/pdfviewer?vid=1&sid=d6056f5b-5ea8-4211-8071-e675375944e1%40pdc-v-sessmgr04
 
 ## Problem 2
 
-```{r}
+```{r, include = FALSE}
 weather_df = 
   rnoaa::meteo_pull_monitors(
     c("USW00094728"),
@@ -152,9 +150,7 @@ weather_df =
   select(name, id, everything())
 ```
 
-We’ll focus on a simple linear regression with tmax as the response and tmin as the predictor.
-
-We will use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of $\hat{r}^2\ \text{and}\ log(\hat{{\beta}_0} * \hat{{\beta}_1})$.
+We focus on a simple linear regression with tmax as the response and tmin as the predictor. We will use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of $\hat{r}^2\ \text{and}\ log(\hat{{\beta}_0} * \hat{{\beta}_1})$.
 
 ```{r}
 bootstrap = 
@@ -170,7 +166,7 @@ output =
     results_ln = map(models, broom::tidy),
     results_rsq = map(models, broom::glance)
     ) %>% 
-  select(-strap, -models) %>% 
+  select(-strap, -models) %>%
   unnest(results_ln, results_rsq) %>% 
   select(.id, term, estimate, adj.r.squared) %>% 
   pivot_wider(
@@ -184,17 +180,35 @@ output =
   select(adj_r_squared, ln_est)
 ```
 
-Plot the distribution of your estimates, and describe these in words.
+We plot the distribution of $\hat{r}^2\ \text{and}\ log(\hat{{\beta}_0} * \hat{{\beta}_1})$, shown below. When using a large number of bootstrap samples, such as 5000, the distrubutions of our estimates are approximately normal. We see that $\hat{r}^2$ is centered at about 0.91, and $log(\hat{{\beta}_0} * \hat{{\beta}_1})$ is centered at about 2.02. 
 
 ```{r}
-ggplot(output, aes(x = adj_r_squared))+
-  geom_histogram()
+ggplot(output, aes(x = adj_r_squared)) +
+  geom_histogram() +
+  labs(title = "Distribution of Adjusted R Squared",
+       x = "Adjusted R Squared",
+       y = "Count")
 
-ggplot(output, aes(x = ln_est))+
-  geom_histogram()
+ggplot(output, aes(x = adj_r_squared)) +
+  geom_density() +
+  labs(title = "Distribution of Adjusted R Squared",
+       x = "Adjusted R Squared",
+       y = "Density")
+
+ggplot(output, aes(x = ln_est)) +
+  geom_histogram() +
+  labs(title = "Distribution of Log of Beta 1 * Beta 0",
+       x = "Log of Beta 1 * Beta 0",
+       y = "Count")
+
+ggplot(output, aes(x = ln_est)) +
+  geom_density() +
+  labs(title = "Distribution of Log of Beta 1 * Beta 0",
+       x = "Log of Beta 1 * Beta 0",
+       y = "Density")
 ```
 
-Using the 5000 bootstrap estimates, identify the 2.5% and 97.5% quantiles to provide a 95% confidence interval
+Using the 5000 bootstrap estimates, we identify the 2.5% and 97.5% quantiles to provide a 95% confidence interval on $\hat{r}^2\ \text{and}\ log(\hat{{\beta}_0} * \hat{{\beta}_1})$. The below table gives the 95% confidence intervals for each respective estimate. 
 
 ```{r}
 conf_int = output %>% 
@@ -216,5 +230,4 @@ conf_int = output %>%
 
 conf_int %>% knitr::kable()
 ```
-
 
