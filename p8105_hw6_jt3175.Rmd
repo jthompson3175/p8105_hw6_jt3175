@@ -152,7 +152,9 @@ weather_df =
 
 We’ll focus on a simple linear regression with tmax as the response and tmin as the predictor.
 
-We will use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of \[ \hat{r}^2\ \text{and}\ log(\hat{{\beta}_0} * \hat{{\beta}_1}) \]. 
+We will use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of 
+
+$ \hat{r}^2\ \text{and}\ log(\hat{{\beta}_0} * \hat{{\beta}_1}) $
 
 ```{r}
 bootstrap = 
